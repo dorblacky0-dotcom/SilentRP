@@ -7,20 +7,30 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import net.risingworld.api.Server;
 import net.rweconomy.silentrp.SilentRP;
+import net.rweconomy.silentrp.models.GlobalBanEntry;
+import net.rweconomy.silentrp.models.SilentRPApiBanlistRequest;
+import net.rweconomy.silentrp.models.SilentRPApiBanlistResponse;
 import net.rweconomy.silentrp.models.SilentRPApiConnectRequest;
+import net.rweconomy.silentrp.models.SilentRPApiConnectResponse;
 
 public class SilentRPHive extends SilentRP {
 	
-	public void connect() {
+	public SilentRPApiConnectResponse connect() {
 		String apiUrl = this.silentConfigData.getHive_url() + "plugin_connect";
 		try {
 			configureTrustAllSSL();
@@ -65,8 +75,15 @@ public class SilentRPHive extends SilentRP {
 	        			while((responseLine = br.readLine()) != null) {
 	        				response.append(responseLine.trim());
 	        			}
-	        		}
-	        	}; break;
+	        			
+	        			if(response.toString().isEmpty()) {
+	        				throw new Exception("[SILENTRP-HIVE] empty response reqeuested!");
+	        			}
+	        			
+	        			Gson rjson = new Gson();
+	        			return (SilentRPApiConnectResponse) rjson.fromJson(response.toString(), SilentRPApiConnectResponse.class);	        			
+	        		}	        			        	
+	        	}
 	        }
 	        conn.disconnect();	        
 		} 
@@ -76,8 +93,72 @@ public class SilentRPHive extends SilentRP {
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+		return null;
 	}
-	
+
+	public List<GlobalBanEntry> getglobalBans() {
+		String apiUrl = this.silentConfigData.getHive_url() + "get_globalbans";
+		List<GlobalBanEntry> entryList = null;
+		try {
+			configureTrustAllSSL();
+			URL url = new URL(apiUrl);
+			
+			HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+			conn.setRequestMethod("POST");
+	        conn.setRequestProperty("Content-Type", "application/json");
+	        conn.setRequestProperty("Accept", "application/json");
+	        conn.setDoOutput(true);
+	        
+	        var requestContent = new SilentRPApiBanlistRequest();
+	        requestContent.setApi_key(this.silentConfigData.getApiKey());
+	        requestContent.setBan_points(this.silentConfigData.getGlobal_ban_atpoints());
+	        
+	        Gson json = new Gson();
+	        String jsonString = json.toJson(requestContent);
+	        try(OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+	        
+	        int status = conn.getResponseCode();
+	        switch(status) {
+	        	default:
+	        	case 400: {
+	        		
+	        	}break;
+	        	case 200:{
+	        		List<SilentRPApiBanlistResponse> bannlist = new ArrayList<SilentRPApiBanlistResponse>();
+	        		try(BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"))) {
+	        			StringBuilder response = new StringBuilder();
+	        			String responseLine = null;
+	        			while((responseLine = br.readLine()) != null) {
+	        				response.append(responseLine.trim());
+	        			}
+	        			
+	        			if(response.toString().isEmpty()) {
+	        				throw new Exception("[SILENTRP-HIVE] empty response reqeuested!");
+	        			}
+	        			
+	        			SilentRPApiBanlistResponse bann_contens = new GsonBuilder().create().fromJson(response.toString(), SilentRPApiBanlistResponse.class);
+	        			if(bann_contens.getEntrys() != null) {
+	        				entryList = new ArrayList<GlobalBanEntry>();
+	        				for(GlobalBanEntry entry : bann_contens.getEntrys()) {
+	        					entryList.add(entry);
+	        				}
+	        			}
+ 	        		}	     
+	        		return entryList;
+	        	}
+	        }
+		}
+		catch(MalformedURLException ex) {
+			throw new RuntimeException(ex);
+		}
+		catch(Exception ex) {
+			System.out.println("[SILENTRP-HIVE] ERROR: " + ex.getMessage());
+		}		
+		return null;
+	}
 	private void configureTrustAllSSL() throws Exception {
         TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
