@@ -36,6 +36,7 @@ public class SilentRPConfig extends SilentRP {
 			configContent.setGlobal_ban_atpoints(50);
 			configContent.setWatermark("");
 			configContent.setHive_url("https://localhost:7166/api/");
+			saveConfig(configContent);
 		} else {
 			String fileContent = Files.readString(configPath);
 			configContent = myConfig.fromJson(fileContent, SilentRPConfigContent.class);

@@ -27,7 +27,7 @@ public class SilentRP extends Plugin implements Listener {
 				System.out.println("[SILENTRP-MAIN] Please register this Plugin under https://silentrp.de or entry your ApiKey in configfile!");
 			}
 			
-			var connectResponse = new SilentRPHive().connect();
+			var connectResponse = new SilentRPHive(silentConfigData).connect();
 			
 			
 		} catch (Exception e) {

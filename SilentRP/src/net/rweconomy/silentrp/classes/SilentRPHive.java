@@ -27,11 +27,15 @@ import net.rweconomy.silentrp.models.SilentRPApiBanlistRequest;
 import net.rweconomy.silentrp.models.SilentRPApiBanlistResponse;
 import net.rweconomy.silentrp.models.SilentRPApiConnectRequest;
 import net.rweconomy.silentrp.models.SilentRPApiConnectResponse;
+import net.rweconomy.silentrp.models.SilentRPConfigContent;
 
 public class SilentRPHive extends SilentRP {
-	
+	private final SilentRPConfigContent silentConfig;
+	public SilentRPHive(SilentRPConfigContent contentData) {
+		this.silentConfig = contentData;
+	}
 	public SilentRPApiConnectResponse connect() {
-		String apiUrl = this.silentConfigData.getHive_url() + "plugin_connect";
+		String apiUrl = this.silentConfig.getHive_url() + "plugin_connect";
 		try {
 			configureTrustAllSSL();
 			URL url = new URL(apiUrl);
@@ -43,7 +47,7 @@ public class SilentRPHive extends SilentRP {
 	        conn.setDoOutput(true);
 	        
 	        var requestData = new SilentRPApiConnectRequest();
-	        requestData.setApi_key(this.silentConfigData.getApiKey());
+	        requestData.setApi_key(this.silentConfig.getApiKey());
 	        
 	        String serverIP = Server.getOption("Server_IP"); 
 	        if(serverIP.isEmpty()) {
@@ -97,7 +101,7 @@ public class SilentRPHive extends SilentRP {
 	}
 
 	public List<GlobalBanEntry> getglobalBans() {
-		String apiUrl = this.silentConfigData.getHive_url() + "get_globalbans";
+		String apiUrl = this.silentConfig.getHive_url() + "get_globalbans";
 		List<GlobalBanEntry> entryList = null;
 		try {
 			configureTrustAllSSL();
@@ -110,8 +114,8 @@ public class SilentRPHive extends SilentRP {
 	        conn.setDoOutput(true);
 	        
 	        var requestContent = new SilentRPApiBanlistRequest();
-	        requestContent.setApi_key(this.silentConfigData.getApiKey());
-	        requestContent.setBan_points(this.silentConfigData.getGlobal_ban_atpoints());
+	        requestContent.setApi_key(this.silentConfig.getApiKey());
+	        requestContent.setBan_points(this.silentConfig.getGlobal_ban_atpoints());
 	        
 	        Gson json = new Gson();
 	        String jsonString = json.toJson(requestContent);
