@@ -1,0 +1,9 @@
+name: SilentRP
+main: net.rweconomy.silentrp.SilentRP
+version: 0.0.1
+author: Jens Schwarz (DrBlacky)
+team: RW Economy Team
+description: "RW Plugin description ..."
+loadorder: 0
+license: MIT
+website: http://www.silentrp.de
